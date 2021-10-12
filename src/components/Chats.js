@@ -1,6 +1,6 @@
 import React, {useRef , useEffect, useState} from "react";
 import { useHistory } from "react-router";
-import {Avatar, ChatEngine} from 'react-chat-engine'
+import { ChatEngine} from 'react-chat-engine'
 import { auth } from "../firebase";
 import { useAuth } from "../contexts/AuthContext";
 import axios from "axios";
@@ -9,6 +9,7 @@ const Chats =  () => {
  
     const history = useHistory();
     const {user} = useAuth();
+    console.log(user)
     const {loading, setLoading} = useState(true);
     const handleLogout = async () => {
         await auth.signOut();
@@ -31,7 +32,7 @@ const Chats =  () => {
             return;
         }
 
-        axios.get('https://api/chatengine.io/users/me',{
+        axios.get('https://api.chatengine.io/users/me/',{
             headers: {
                 "project-id" : "441f03ce-1d22-488d-9f1e-7aba5b42bd4b",
                 "user-name" : user.email,
@@ -42,24 +43,27 @@ const Chats =  () => {
             setLoading(false);
         })
         .catch(() => {
-            let formData = new FormData();
-            formData.append('email',user.email);
-            formData.append('username', user.displayName);
-            formData.append('secret', user.uid );
+            let formdata = new FormData();
+            formdata.append('email',user.email);
+            formdata.append('username', user.displayName);
+            formdata.append('secret', user.uid );
 
-            getFile(user.photoUrl)
+            getFile(user.photoURL)
             .then((avatar) => {
-                formData.append('avatar', avatar, avatar.name)
+                formdata.append('avatar', avatar, avatar.name)
 
-
-
-
-                ///csontiasgkasdjaklsjdfklasdjfffffffffffffffffffffffffffffffl
+                
+                axios.post('https://api.chatengine.io/users/',
+                formdata, { headers:{"private-key" : "0290e49a-e0bd-4a0f-b8fb-6b01dfed4edc"}})
+                .then(() => setLoading(false))
+                .catch((error) => console.log(error))
+                
             })
+                
         })
     }, [user,history])
 
-
+if(!user || loading) return "loading"
 
 
     return(
@@ -75,9 +79,9 @@ const Chats =  () => {
 
             <ChatEngine
                 height="calc(100vh - 66px)"
-                projectId="441f03ce-1d22-488d-9f1e-7aba5b42bd4b"
-                userName=""
-                userSecret=""
+                projectID="441f03ce-1d22-488d-9f1e-7aba5b42bd4b"
+                userName={user.email}
+                userSecret={user.uid}
 
              />
         </div>
